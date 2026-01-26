@@ -7,6 +7,6 @@
 |      Batch       |                                     2k25                                     |
 |   Github Link    | [https://github.com/mmujtaba25/cs-212](https://github.com/mmujtaba25/cs-212) |
 
-## Lab 1
+## Lab N
 
-In the first lab, we setup Java, and became familiar with its syntax coming from C++.
+Lab description
