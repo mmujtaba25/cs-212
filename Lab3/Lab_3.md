@@ -7,6 +7,7 @@
 |      Batch       |                                     2k25                                     |
 |   Github Link    | [https://github.com/mmujtaba25/cs-212](https://github.com/mmujtaba25/cs-212) |
 
-## Lab N
+## Lab 3
 
-Lab description
+In this lab we explored java, focusing on loops and decision making statements such as
+(`for`, `while`, `do while`) and (`if`, `if else`, `switch`) respectively.
