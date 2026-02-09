@@ -1,0 +1,51 @@
+% ---------- Page layout ----------
+\usepackage[a4paper, left=1.2cm, right=1.2cm, top=1.5cm, bottom=1.5cm]{geometry}
+
+% ---------- Fonts ----------
+\usepackage{fontspec}
+\setmainfont{Inter}
+\setmonofont{JetBrains Mono}[Scale=MatchLowercase]
+
+% ---------- Section formatting ----------
+\makeatletter
+\renewcommand{\section}{
+  \clearpage
+  \@startsection
+    {section}
+    {1}
+    {0pt}
+    {0pt}
+    {12pt}
+    {\normalfont\Large}
+}
+\makeatother
+
+% ---------- Code blocks ----------
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{mdframed} % Add this for solid backgrounds
+
+% This wraps every code block in one solid, gap-free box
+\surroundwithmdframed[
+  backgroundcolor=black,
+  linecolor=white,      % This creates your border
+  linewidth=0.5pt,
+  innerleftmargin=0.5em,
+  innerrightmargin=0.5em,
+  innertopmargin=0.5em,
+  innerbottommargin=0.5em
+]{lstlisting}
+
+\lstset{
+  % IMPORTANT: Remove backgroundcolor and frame from here
+  basicstyle=\ttfamily\small\color{white},
+  keywordstyle=\color{cyan},
+  stringstyle=\color{orange},
+  commentstyle=\color{gray},
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  showstringspaces=false,
+}
+
+% ---------- Paragraph spacing ----------
+\setlength{\parskip}{6pt}

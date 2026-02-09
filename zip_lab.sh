@@ -19,7 +19,7 @@ if [ ! -d "$DIR_PATH" ]; then
     exit 1
 fi
 
-ZIP_NAME="Lab_N_${CMS_ID}.${NAME}.zip"
+ZIP_NAME="_zips/Lab_N_${CMS_ID}.${NAME}.zip"
 ZIP_NAME="${ZIP_NAME/Lab_N/Lab_${N}}"
 
 # Create zip excluding .docx files

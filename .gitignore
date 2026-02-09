@@ -50,3 +50,5 @@ local.properties
 *.tar.gz
 *.7z
 *.bak
+
+*.temp.*
