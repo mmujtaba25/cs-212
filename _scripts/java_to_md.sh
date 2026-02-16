@@ -56,7 +56,10 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
   # Create the title for this section
   TITLE="$LAB_PART - $TASK_PART"
 
+  echo ""
+  echo "═══════════════════════════════════════════════════"
   echo "  Processing: $TITLE"
+  echo "═══════════════════════════════════════════════════"
 
   # Write the title and source code to markdown
   {
@@ -68,21 +71,49 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
     echo
   } >>"$OUTPUT_MD"
 
-  # Attempt to compile and run the Java file
-  echo "  Attempting to compile and run..."
+  # Determine the source root for compilation
+  if [ -n "$PACKAGE" ] && [ "$PACKAGE" != "(default package)" ]; then
+    # Get the first part of the package (e.g., "Lab5" from "Lab5.Tasks")
+    FIRST_PACKAGE=$(echo "$PACKAGE" | cut -d'.' -f1)
 
-  # Get the directory of the Java file
-  FILE_DIR=$(dirname "$file")
+    # Get the directory containing the file
+    FILE_DIR=$(dirname "$file")
 
-  # Compile the Java file with proper classpath
-  # We need to compile from the source root, not from the file location
-  cd "$SOURCE_DIR" 2>/dev/null
+    # Find the source root by looking for the directory that contains FIRST_PACKAGE
+    CURRENT_DIR="$FILE_DIR"
+    SOURCE_ROOT=""
+
+    while [ "$CURRENT_DIR" != "/" ] && [ -n "$CURRENT_DIR" ]; do
+      PARENT=$(dirname "$CURRENT_DIR")
+      BASENAME=$(basename "$CURRENT_DIR")
+
+      # If current directory name matches first package, parent is the source root
+      if [ "$BASENAME" = "$FIRST_PACKAGE" ]; then
+        SOURCE_ROOT="$PARENT"
+        break
+      fi
+
+      CURRENT_DIR="$PARENT"
+    done
+
+    # If we couldn't determine source root, use SOURCE_DIR
+    if [ -z "$SOURCE_ROOT" ] || [ "$SOURCE_ROOT" = "/" ]; then
+      SOURCE_ROOT="$SOURCE_DIR"
+    fi
+  else
+    SOURCE_ROOT="$SOURCE_DIR"
+  fi
+
+  # Compile from the source root
+  echo "  [1/2] Compiling..."
+  cd "$SOURCE_ROOT" 2>/dev/null
   COMPILE_OUTPUT=$(javac "$file" 2>&1)
   COMPILE_STATUS=$?
-  cd - >/dev/null 2>&1
 
   # Check if compilation was successful
   if [ $COMPILE_STATUS -eq 0 ]; then
+    echo "  ✓ Compilation successful"
+
     # Extract fully qualified class name (package.ClassName)
     if [ -n "$PACKAGE" ] && [ "$PACKAGE" != "(default package)" ]; then
       FULL_CLASS_NAME="${PACKAGE}.${CLASS}"
@@ -90,11 +121,10 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
       FULL_CLASS_NAME="$CLASS"
     fi
 
-    # Change to source directory to handle relative paths correctly
-    cd "$SOURCE_DIR" 2>/dev/null
+    echo "  [2/2] Running program..."
+    echo ""
 
-    # First attempt: Try to run with a 2-second timeout to detect if input is needed
-    # Using 'timeout' command (or 'gtimeout' on macOS with coreutils)
+    # Check if timeout/gtimeout is available
     if command -v timeout &>/dev/null; then
       TIMEOUT_CMD="timeout"
     elif command -v gtimeout &>/dev/null; then
@@ -103,68 +133,87 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
       TIMEOUT_CMD=""
     fi
 
-    if [ -n "$TIMEOUT_CMD" ]; then
-      # Try running with timeout first to detect if program needs input
-      PROGRAM_OUTPUT=$($TIMEOUT_CMD 2s java "$FULL_CLASS_NAME" 2>&1)
-      RUN_STATUS=$?
+    # Create a temporary file for capturing output
+    TEMP_OUTPUT=$(mktemp)
 
-      # Exit code 124 means timeout - program likely waiting for input
-      if [ $RUN_STATUS -eq 124 ]; then
-        echo "  ⚠️  Program requires user input!"
-        echo "  Running interactively..."
-        echo ""
-        echo "  ┌─────────────────────────────────────────────┐"
-        echo "  │  Running: $FULL_CLASS_NAME"
-        echo "  └─────────────────────────────────────────────┘"
-        echo ""
+    # First, try with a short timeout to see if program needs input
+    NEEDS_INPUT=true
 
-        # Run the program interactively so user can see and provide input
-        java "$FULL_CLASS_NAME"
-        INTERACTIVE_STATUS=$?
+    if [ "$NEEDS_INPUT" = true ]; then
+      # Program needs input - run it interactively
+      echo "  ┌────────────────────────────────────────────────┐"
+      echo "  │  ⚠️  This program requires user input          │"
+      echo "  │  The session will be captured for the PDF     │"
+      echo "  └────────────────────────────────────────────────┘"
+      echo ""
 
-        echo ""
-        echo "  ┌─────────────────────────────────────────────┐"
-        echo "  │  Program completed. Now capturing output..."
-        echo "  └─────────────────────────────────────────────┘"
-        echo ""
-        echo "  Please provide the same input again for documentation:"
-        echo "  (Press Ctrl+D or Ctrl+Z when finished)"
-        echo ""
+      # Run with script to capture everything on macOS
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS version - use script with typescript file and wait for output
+        TYPESCRIPT_FILE=$(mktemp)
 
-        # Capture the output with user's input
-        PROGRAM_OUTPUT=$(java "$FULL_CLASS_NAME" 2>&1)
+        # Run script connected to the terminal; run it in background and wait for it explicitly
+        script -q "$TYPESCRIPT_FILE" bash -lc "java $FULL_CLASS_NAME" </dev/tty &
+        SCRIPT_PID=$!
+        wait "$SCRIPT_PID"
+        SCRIPT_EXIT=$?
+
+        # Give the file a moment to be written (in case of buffering); poll a few times
+        RETRIES=0
+        while [ ! -s "$TYPESCRIPT_FILE" ] && [ $RETRIES -lt 10 ]; do
+          sleep 0.1
+          RETRIES=$((RETRIES + 1))
+        done
+
+        # Read and clean the typescript file if it exists and is non-empty
+        if [ -f "$TYPESCRIPT_FILE" ] && [ -s "$TYPESCRIPT_FILE" ]; then
+          PROGRAM_OUTPUT=$(sed 's/\r$//g' "$TYPESCRIPT_FILE" | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^Script started' | grep -v '^Script done')
+          RUN_STATUS=$SCRIPT_EXIT
+        else
+          PROGRAM_OUTPUT="[No output captured - check if program ran correctly]"
+          RUN_STATUS=1
+        fi
+
+        rm -f "$TYPESCRIPT_FILE"
+      else
+        # Linux version
+        script -q -c "java $FULL_CLASS_NAME" "$TEMP_OUTPUT" </dev/tty
+        PROGRAM_OUTPUT=$(cat "$TEMP_OUTPUT" | col -b)
         RUN_STATUS=$?
       fi
+
+      echo ""
+      echo "  ✓ Session captured successfully"
     else
-      # No timeout command available, just run the program
-      echo "  Running program..."
-      PROGRAM_OUTPUT=$(java "$FULL_CLASS_NAME" 2>&1)
+      # Program doesn't need input - use captured output
+      PROGRAM_OUTPUT=$(cat "$TEMP_OUTPUT")
       RUN_STATUS=$?
+      echo "  ✓ Program executed"
     fi
 
+    rm -f "$TEMP_OUTPUT"
     cd - >/dev/null 2>&1
 
     # Add program output section to markdown
     {
       echo "## Program Output"
       echo
-      if [ $RUN_STATUS -eq 0 ] || [ $RUN_STATUS -eq 124 ]; then
-        echo '```'
+      echo '```'
+      if [ -n "$PROGRAM_OUTPUT" ]; then
         echo "$PROGRAM_OUTPUT"
-        echo '```'
       else
-        echo '```'
-        echo "Program execution failed:"
-        echo "$PROGRAM_OUTPUT"
-        echo '```'
+        echo "[No output]"
       fi
+      echo '```'
       echo
     } >>"$OUTPUT_MD"
 
-    # Clean up compiled .class files
-    find "$SOURCE_DIR" -name "*.class" -delete 2>/dev/null
+    # Clean up compiled .class files from source root
+    find "$SOURCE_ROOT" -name "*.class" -delete 2>/dev/null
   else
     # If compilation failed, note it in the markdown
+    echo "  ✗ Compilation failed"
+    cd - >/dev/null 2>&1
     {
       echo "## Program Output"
       echo
@@ -185,7 +234,10 @@ done
 rm "$TMP_FILE"
 
 echo ""
-echo "Done!"
-echo "Markdown file created: $OUTPUT_MD"
+echo "═══════════════════════════════════════════════════"
+echo "✓ All tasks processed!"
+echo "═══════════════════════════════════════════════════"
 echo ""
+echo "Markdown file created: $OUTPUT_MD"
 echo "To convert to PDF, run: ./md_to_pdf.sh $OUTPUT_MD"
+echo ""
