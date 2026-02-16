@@ -11,9 +11,9 @@ source "$SCRIPT_DIR/ui.sh"
 
 # * validation
 validate_args() {
-  if [ $# -ne 1 ]; then
-    echo -e "${RED}Usage: $0 <markdown_file>${RESET}"
-    echo -e "${YELLOW}Example: $0 Lab5.md${RESET}"
+  if [ $# -lt 1 ] || [ $# -gt 3 ]; then
+    echo -e "${RED}Usage: $0 <markdown_file> [start_page] [end_page]${RESET}"
+    echo -e "${YELLOW}Example: $0 Lab5.md 3 10${RESET}"
     exit 1
   fi
 }
@@ -65,6 +65,8 @@ check_dependencies() {
 validate_args "$@"
 
 INPUT_MD="$1"
+START_PAGE="${2:-}" # Optional, default empty
+END_PAGE="${3:-}"   # Optional, default empty
 
 # Check if input file exists
 validate_file_exists "$INPUT_MD"
@@ -82,15 +84,22 @@ TEMPLATE_PATH="${PROJECT_ROOT}/_scripts/style.typ"
 validate_template_exists "$TEMPLATE_PATH"
 
 print_header "Converting markdown to PDF using Typst"
-
 echo "Input:    $INPUT_MD"
 echo "Output:   $OUTPUT_PDF"
 
-# Convert using Typst engine with the template and syntax highlighting
+# Build pandoc options for page ranges
+# default to 1 if not provided
+: "${START_PAGE:=1}"
+
+PAGE_VARS=()
+PAGE_VARS+=("-V" "start-page=$START_PAGE")
+PAGE_VARS+=("-V" "end-page=$END_PAGE")
+
 pandoc "$INPUT_MD" \
   -o "$OUTPUT_PDF" \
   --pdf-engine=typst \
-  --template="$TEMPLATE_PATH"
+  --template="$TEMPLATE_PATH" \
+  "${PAGE_VARS[@]}"
 
 # Check result
 if [ $? -eq 0 ]; then

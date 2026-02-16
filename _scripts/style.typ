@@ -1,4 +1,9 @@
 // ---------- Page layout ----------
+#let startPage = $start-page$
+
+// set the counter to startPage
+#counter(page).update(startPage)
+
 #set page(
   paper: "a4",
   margin: (
@@ -6,7 +11,12 @@
     right: 1.2cm,
     top: 1.5cm,
     bottom: 1.5cm
-  )
+  ),
+  footer: context [
+    #set align(right)
+    #set text(8pt)
+    Page #counter(page).display("1")
+  ]
 )
 
 // ---------- Fonts ----------
