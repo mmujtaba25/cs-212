@@ -5,20 +5,69 @@
 # Requires: pandoc, typst
 # Outputs PDFs to _compiled_labs
 
-# Check if correct number of arguments provided
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 <markdown_file>"
-  echo "Example: $0 Lab5.md"
-  exit 1
-fi
+# Source UI utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/ui.sh"
+
+# * validation
+validate_args() {
+  if [ $# -ne 1 ]; then
+    echo -e "${RED}Usage: $0 <markdown_file>${RESET}"
+    echo -e "${YELLOW}Example: $0 Lab5.md${RESET}"
+    exit 1
+  fi
+}
+
+validate_file_exists() {
+  local file="$1"
+  if [ ! -f "$file" ]; then
+    echo -e "${RED}Error: File '$file' not found!${RESET}"
+    exit 1
+  fi
+}
+
+validate_template_exists() {
+  local template="$1"
+  if [ ! -f "$template" ]; then
+    echo -e "${RED}Error: Template '$template' not found!${RESET}"
+    exit 1
+  fi
+}
+
+check_dependencies() {
+  local missing=()
+
+  if ! command -v pandoc &>/dev/null; then
+    missing+=("pandoc")
+  fi
+
+  if ! command -v typst &>/dev/null; then
+    missing+=("typst")
+  fi
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    print_error "Missing dependencies: ${missing[*]}"
+    echo ""
+    echo "Make sure pandoc and typst are installed:"
+    echo -e "  ${CYAN}macOS:${RESET}  brew install typst pandoc"
+    echo -e "  ${CYAN}Linux:${RESET}  Use your package manager or download from:"
+    echo "          https://github.com/typst/typst/releases"
+    echo "          https://pandoc.org/installing.html"
+    exit 1
+  fi
+}
+# * validation end
+
+# ==============================================================================
+# Main Script
+# ==============================================================================
+
+validate_args "$@"
 
 INPUT_MD="$1"
 
 # Check if input file exists
-if [ ! -f "$INPUT_MD" ]; then
-  echo "Error: File '$INPUT_MD' not found!"
-  exit 1
-fi
+validate_file_exists "$INPUT_MD"
 
 # Extract filename without extension
 BASENAME=$(basename "$INPUT_MD" .md)
@@ -30,16 +79,12 @@ OUTPUT_PDF="${BASENAME}.pdf"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TEMPLATE_PATH="${PROJECT_ROOT}/_scripts/style.typ"
 
-if [ ! -f "$TEMPLATE_PATH" ]; then
-  echo "Error: Template '$TEMPLATE_PATH' not found!"
-  exit 1
-fi
+validate_template_exists "$TEMPLATE_PATH"
 
-echo "Converting markdown to PDF using Typst..."
+print_header "Converting markdown to PDF using Typst"
+
 echo "Input:    $INPUT_MD"
 echo "Output:   $OUTPUT_PDF"
-echo "Template: $TEMPLATE_PATH"
-echo ""
 
 # Convert using Typst engine with the template and syntax highlighting
 pandoc "$INPUT_MD" \
@@ -50,16 +95,9 @@ pandoc "$INPUT_MD" \
 # Check result
 if [ $? -eq 0 ]; then
   echo ""
-  echo "✓ Success!"
-  echo "PDF created: $OUTPUT_PDF"
+  print_header "PDF created successfully: $OUTPUT_PDF"
 else
-  echo ""
-  echo "✗ Error: PDF conversion failed!"
-  echo ""
-  echo "Make sure pandoc and typst are installed:"
-  echo "  macOS:  brew install typst pandoc"
-  echo "  Linux:  Use your package manager or download from:"
-  echo "          https://github.com/typst/typst/releases"
-  echo "          https://pandoc.org/installing.html"
+  print_error "PDF conversion failed!"
+  check_dependencies
   exit 1
 fi

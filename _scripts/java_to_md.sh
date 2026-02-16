@@ -4,12 +4,25 @@
 # Purpose: Converts Java source files to a single markdown file, organized by package
 # and includes program execution output for each file
 
-# Check if correct number of arguments provided
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 <directory>"
-  echo "Example: $0 ./my-java-project"
-  exit 1
-fi
+# Source UI utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/ui.sh"
+
+# * validation
+validate_args() {
+  if [ $# -ne 1 ]; then
+    echo -e "${RED}Usage: $0 <directory>${RESET}"
+    echo -e "${YELLOW}Example: $0 ./my-java-project${RESET}"
+    exit 1
+  fi
+}
+# * validation end
+
+# ==============================================================================
+# Main Script
+# ==============================================================================
+
+validate_args "$@"
 
 SOURCE_DIR="$1"
 
@@ -23,7 +36,7 @@ OUTPUT_MD="${DIR_NAME}.md"
 # Create temporary file for sorting packages
 TMP_FILE=$(mktemp)
 
-echo "Collecting Java files from $SOURCE_DIR..."
+print_info "Collecting Java files from $SOURCE_DIR..."
 
 # Find all Java files and extract package information
 find "$SOURCE_DIR" -type f -name "*.java" | while read -r file; do
@@ -35,7 +48,7 @@ find "$SOURCE_DIR" -type f -name "*.java" | while read -r file; do
   echo "$PACKAGE|$file" >>"$TMP_FILE"
 done
 
-echo "Processing and organizing files by package..."
+print_info "Processing and organizing files by package..."
 
 # Sort files alphabetically by package name, then process each file
 sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
@@ -57,9 +70,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
   TITLE="$LAB_PART - $TASK_PART"
 
   echo ""
-  echo "═══════════════════════════════════════════════════"
-  echo "  Processing: $TITLE"
-  echo "═══════════════════════════════════════════════════"
+  print_section "$TITLE"
 
   # Write the title and source code to markdown
   {
@@ -105,14 +116,14 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
   fi
 
   # Compile from the source root
-  echo "  [1/2] Compiling..."
+  print_info "[1/2] Compiling..."
   cd "$SOURCE_ROOT" 2>/dev/null
   COMPILE_OUTPUT=$(javac "$file" 2>&1)
   COMPILE_STATUS=$?
 
   # Check if compilation was successful
   if [ $COMPILE_STATUS -eq 0 ]; then
-    echo "  ✓ Compilation successful"
+    print_success "Compilation successful"
 
     # Extract fully qualified class name (package.ClassName)
     if [ -n "$PACKAGE" ] && [ "$PACKAGE" != "(default package)" ]; then
@@ -121,7 +132,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
       FULL_CLASS_NAME="$CLASS"
     fi
 
-    echo "  [2/2] Running program..."
+    print_info "[2/2] Running program..."
     echo ""
 
     # Check if timeout/gtimeout is available
@@ -141,10 +152,8 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
 
     if [ "$NEEDS_INPUT" = true ]; then
       # Program needs input - run it interactively
-      echo "  ┌────────────────────────────────────────────────┐"
-      echo "  │  ⚠️  This program requires user input          │"
-      echo "  │  The session will be captured for the PDF     │"
-      echo "  └────────────────────────────────────────────────┘"
+      print_warning "This program requires user input"
+      print_info "The session will be captured for the PDF"
       echo ""
 
       # Run with script to capture everything on macOS
@@ -183,12 +192,12 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
       fi
 
       echo ""
-      echo "  ✓ Session captured successfully"
+      print_success "Session captured successfully"
     else
       # Program doesn't need input - use captured output
       PROGRAM_OUTPUT=$(cat "$TEMP_OUTPUT")
       RUN_STATUS=$?
-      echo "  ✓ Program executed"
+      print_success "Program executed"
     fi
 
     rm -f "$TEMP_OUTPUT"
@@ -212,7 +221,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
     find "$SOURCE_ROOT" -name "*.class" -delete 2>/dev/null
   else
     # If compilation failed, note it in the markdown
-    echo "  ✗ Compilation failed"
+    print_error "Compilation failed"
     cd - >/dev/null 2>&1
     {
       echo "## Program Output"
@@ -234,10 +243,6 @@ done
 rm "$TMP_FILE"
 
 echo ""
-echo "═══════════════════════════════════════════════════"
-echo "✓ All tasks processed!"
-echo "═══════════════════════════════════════════════════"
-echo ""
-echo "Markdown file created: $OUTPUT_MD"
-echo "To convert to PDF, run: ./md_to_pdf.sh $OUTPUT_MD"
-echo ""
+print_header "${GREEN}Markdown Generation Complete!${GREEN}"
+print_info "Markdown file created: ${PURPLE}$OUTPUT_MD${RESET}"
+echo -e "To convert to PDF, run: ${CYAN}./md_to_pdf.sh $OUTPUT_MD${RESET}"
