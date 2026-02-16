@@ -1,22 +1,45 @@
 // ---------- Page layout ----------
+// ---------- Variables from Pandoc ----------
 #let startPage = $start-page$
+#let endPage = $end-page$
 
-// set the counter to startPage
+// Set the counter to startPage
 #counter(page).update(startPage)
 
 #set page(
   paper: "a4",
-  margin: (
-    left: 1.2cm,
-    right: 1.2cm,
-    top: 1.5cm,
-    bottom: 1.5cm
-  ),
-  footer: context [
-    #set align(right)
-    #set text(8pt)
-    Page #counter(page).display("1")
-  ]
+  margin: (left: 1.2cm, right: 1.2cm, top: 1.5cm, bottom: 1.5cm),
+  
+  // Header logic to hide content if past endPage
+  foreground: context {
+    let current = counter(page).at(here()).first()
+    let limit = if str(endPage) != "" { int(endPage) } else { 99999 }
+    
+    if current > limit {
+      // Create an opaque white box over the entire page 
+      // to effectively "cut off" the document
+      place(top + left, rect(width: 100%, height: 100%, fill: white))
+    }
+  },
+
+footer: context {
+    let current = counter(page).at(here()).first()
+    // Convert endPage to an integer for comparison and display
+    let limit = if str(endPage) != "" { int(endPage) } else { 0 }
+    
+    // Only show footer if we are within the allowed range
+    if limit == 0 or current <= limit {
+      set align(right)
+      set text(8pt)
+      
+      // If a limit is set, show "Page X of LIMIT", otherwise just "Page X"
+      if limit != 0 {
+        [Page #current of #limit]
+      } else {
+        [Page #current]
+      }
+    }
+  }
 )
 
 // ---------- Fonts ----------
