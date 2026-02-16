@@ -26,14 +26,14 @@
 #show heading.where(level: 1): it => {
   pagebreak(weak: true)
   v(0pt)  // No space above (matches 0pt in LaTeX)
-  set text(size: 17pt, weight: "regular")  // \normalfont\Large
+  set text(size: 17pt, weight: "bold")  // \normalfont\Large
   block(above: 0pt, below: 12pt)[#it]
 }
 
 // Level 2 headings (for "Program Output" sections)
 #show heading.where(level: 2): it => {
-  set text(size: 14pt, weight: "bold")
-  block(above: 0.8em, below: 0.4em)[#it]
+  set text(size: 14pt, weight: "regular")
+  block(above: 0.8em, below: 0.6em)[#it]
 }
 
 // ---------- Code blocks ----------
@@ -44,12 +44,12 @@
     stroke: 0.5pt + rgb("#ffffff"), // linecolor=white, linewidth=0.5pt
     width: 100%,
     inset: (                        // inner margins
-      left: 0.5em,
-      right: 0.5em,
-      top: 0.5em,
-      bottom: 0.5em
+      left: 1em,
+      right: 1em,
+      top: 1em,
+      bottom: 1em
     ),
-    radius: 0pt,                    // No rounded corners
+    radius: 2pt,                    // No rounded corners
     breakable: true                 // Allow breaks across pages
   )[
     #set text(
