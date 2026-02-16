@@ -20,7 +20,7 @@ public class Main {
 }
 ```
 
-OUTPUT:
+## OUTPUT:
 ```shell
 501
 Mathematics

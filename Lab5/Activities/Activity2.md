@@ -21,7 +21,7 @@ public class Main {
 
 ```
 
-OUTPUT:
+## OUTPUT:
 ```shell
 Java Basics
 29.99
