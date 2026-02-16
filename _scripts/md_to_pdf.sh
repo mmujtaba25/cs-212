@@ -90,7 +90,10 @@ echo "Output:   $OUTPUT_PDF"
 # Build pandoc options for page ranges
 # default to 1 if not provided
 : "${START_PAGE:=1}"
-: "${END_PAGE:=0}"
+: "${END_PAGE:=0}" # 0 -> no end page limit
+
+# if END_PAGE = 0  -> Page 1, Page 2
+# if END_PAGE != 0 -> Page 1 of 2, Page 2 of 2 (END_PAGE = 2 here)
 
 PAGE_VARS=()
 PAGE_VARS+=("-V" "start-page=$START_PAGE")

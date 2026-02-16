@@ -9,18 +9,6 @@
 #set page(
   paper: "a4",
   margin: (left: 1.2cm, right: 1.2cm, top: 1.5cm, bottom: 1.5cm),
-  
-  // Header logic to hide content if past endPage
-  foreground: context {
-    let current = counter(page).at(here()).first()
-    let limit = if str(endPage) != "" { int(endPage) } else { 99999 }
-    
-    if current > limit {
-      // Create an opaque white box over the entire page 
-      // to effectively "cut off" the document
-      place(top + left, rect(width: 100%, height: 100%, fill: white))
-    }
-  },
 
 footer: context {
     let current = counter(page).at(here()).first()
