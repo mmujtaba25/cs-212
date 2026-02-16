@@ -176,7 +176,12 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
 
         # Read and clean the typescript file if it exists and is non-empty
         if [ -f "$TYPESCRIPT_FILE" ] && [ -s "$TYPESCRIPT_FILE" ]; then
-          PROGRAM_OUTPUT=$(sed 's/\r$//g' "$TYPESCRIPT_FILE" | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^Script started' | grep -v '^Script done')
+          # Remove carriage returns, ANSI escape codes, and backspace sequences
+          PROGRAM_OUTPUT=$(sed 's/\r//g' "$TYPESCRIPT_FILE" |
+            sed 's/\x1b\[[0-9;]*m//g' |
+            grep -v '^Script started' |
+            grep -v '^Script done' |
+            col -b) # remove backspace sequences
           RUN_STATUS=$SCRIPT_EXIT
         else
           PROGRAM_OUTPUT="[No output captured - check if program ran correctly]"
