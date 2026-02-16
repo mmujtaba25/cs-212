@@ -40,8 +40,8 @@
 // This matches the mdframed + lstlisting setup from LaTeX
 #show raw.where(block: true): it => {
   block(
-    fill: rgb("#000000"),           // backgroundcolor=black
-    stroke: 0.5pt + rgb("#ffffff"), // linecolor=white, linewidth=0.5pt
+    fill: rgb("#1e1f22"),           // Claude.icls TEXT background
+    stroke: 0.5pt + rgb("#393b40"), // Claude.icls DOC_CODE_BLOCK effect color
     width: 100%,
     inset: (                        // inner margins
       left: 1em,
@@ -53,7 +53,7 @@
     breakable: true                 // Allow breaks across pages
   )[
     #set text(
-      fill: rgb("#ffffff"),         // basicstyle color=white
+      fill: rgb("#bcbec4"),         // Claude.icls TEXT foreground
       size: 10pt                    // basicstyle small
     )
     #set par(leading: 0.65em)       // Line spacing in code blocks
@@ -61,17 +61,17 @@
   ]
 }
 
-// Inline code styling (not in the LaTeX but useful)
+// Inline code styling
 #show raw.where(block: false): it => {
   box(
-    fill: rgb("#f0f0f0"),
+    fill: rgb("#343539"),           // Claude.icls DOC_CODE_INLINE background
     inset: (x: 0.2em, y: 0.1em),
     outset: (y: 0.15em),
     radius: 2pt
   )[
     #set text(
       size: 0.9em,
-      fill: rgb("#000000")
+      fill: rgb("#ced0d6")          // Claude.icls DOC_CODE_INLINE foreground
     )
     #it
   ]
