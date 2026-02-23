@@ -65,8 +65,8 @@ check_dependencies() {
 validate_args "$@"
 
 INPUT_MD="$1"
-START_PAGE="${2:-}" # Optional, default empty
-END_PAGE="${3:-}"   # Optional, default empty
+START_PAGE="${2:-}" # Optional
+END_PAGE="${3:-}"   # Optional
 
 # Check if input file exists
 validate_file_exists "$INPUT_MD"
@@ -84,6 +84,17 @@ TEMPLATE_PATH="${PROJECT_ROOT}/_scripts/style.typ"
 validate_template_exists "$TEMPLATE_PATH"
 
 print_info "${YELLOW}Converting $INPUT_MD to PDF${RESET}"
+# check if page numbers are provided
+if [ -n "$START_PAGE" ] && [ -n "$END_PAGE" ]; then
+  echo ""
+  print_info "Start page : ${PURPLE}$START_PAGE${RESET}"
+  print_info "End page   : ${PURPLE}$END_PAGE${RESET}"
+  print_info "Format     : ${PURPLE}Page $START_PAGE of $END_PAGE${RESET}"
+elif [ -n "$START_PAGE" ]; then
+  echo ""
+  print_info "Start page : ${PURPLE}$START_PAGE${RESET}"
+  print_info "Format     : ${PURPLE}Page $START_PAGE${RESET}"
+fi
 
 # Build pandoc options for page ranges
 # default to 1 if not provided

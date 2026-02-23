@@ -10,10 +10,27 @@ source "${PROJECT_ROOT}/_scripts/ui.sh"
 
 # * validation
 validate_args() {
-  if [ $# -ne 1 ]; then
-    echo -e "${RED}Usage: $0 <LabDirectory>${RESET}"
-    echo -e "${YELLOW}Example: $0 Lab5${RESET}"
+  # Allow 1, 2, or 3 arguments
+  if [ $# -lt 1 ] || [ $# -gt 3 ]; then
+    echo -e "${RED}Usage: $0 <LabDirectory> [start_page] [end_page]${RESET}"
+    echo -e "${YELLOW}Example: $0 Lab5 3 10${RESET}"
     exit 1
+  fi
+
+  # Validate start_page if provided
+  if [ $# -ge 2 ]; then
+    if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+      echo -e "${RED}Error: start_page must be an integer >= 0.${RESET}"
+      exit 1
+    fi
+  fi
+
+  # Validate end_page if provided
+  if [ $# -eq 3 ]; then
+    if ! [[ "$3" =~ ^[0-9]+$ ]]; then
+      echo -e "${RED}Error: end_page must be an integer >= 0.${RESET}"
+      exit 1
+    fi
   fi
 }
 
@@ -46,6 +63,8 @@ clear
 validate_args "$@"
 
 LAB_NAME="$1"
+START_PAGE="${2:-}"
+END_PAGE="${3:-}"
 LAB_DIR="${PROJECT_ROOT}/${LAB_NAME}"
 SCRIPTS_DIR="${PROJECT_ROOT}/_scripts"
 COMPILED_DIR="${PROJECT_ROOT}/_compiled_labs"
@@ -96,7 +115,10 @@ print_step "2" "2" "Running ${MD_TO_PDF_NAME}"
 
 # Change to compiled directory and convert
 cd "$COMPILED_DIR" || exit 1
-bash "$MD_TO_PDF_DIR" "$(basename "$TEMP_MD_DIR")"
+bash "$MD_TO_PDF_DIR" \
+  "$(basename "$TEMP_MD_DIR")" \
+  "$START_PAGE" \
+  "$END_PAGE"
 
 # Rename the output PDF (remove .temp from name)
 TEMP_PDF="${LAB_NAME}.temp.pdf"
@@ -112,6 +134,6 @@ cd "$PROJECT_ROOT" || exit 1
 
 echo ""
 print_header "Compilation Complete!" "$BLUE"
-print_info "Markdown: ${PURPLE}_compiled_labs/${TEMP_MD_NAME}${RESET}"
-print_info "PDF:      ${PURPLE}_compiled_labs/${FINAL_PDF}${RESET}"
+print_info "Markdown : ${PURPLE}_compiled_labs/${TEMP_MD_NAME}${RESET}"
+print_info "PDF      : ${PURPLE}_compiled_labs/${FINAL_PDF}${RESET}"
 echo ""
