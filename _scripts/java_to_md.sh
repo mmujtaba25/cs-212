@@ -36,7 +36,8 @@ OUTPUT_MD="${DIR_NAME}.md"
 # Create temporary file for sorting packages
 TMP_FILE=$(mktemp)
 
-print_info "Collecting Java files from $SOURCE_DIR..."
+RELATIVE_SOURCE_DIR="${SOURCE_DIR#$PWD/}"
+print_info "Collecting Java files from ${PURPLE}$RELATIVE_SOURCE_DIR/...${RESET}"
 
 # Find all Java files and extract package information
 find "$SOURCE_DIR" -type f -name "*.java" | while read -r file; do
@@ -152,8 +153,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
 
     if [ "$NEEDS_INPUT" = true ]; then
       # Program needs input - run it interactively
-      print_warning "This program requires user input"
-      print_info "The session will be captured for the PDF"
+      print_warning "Capturing Session..."
       echo ""
 
       # Run with script to capture everything on macOS
@@ -248,6 +248,4 @@ done
 rm "$TMP_FILE"
 
 echo ""
-print_header "${GREEN}Markdown Generation Complete!${GREEN}"
-print_info "Markdown file created: ${PURPLE}$OUTPUT_MD${RESET}"
-echo -e "To convert to PDF, run: ${CYAN}./md_to_pdf.sh $OUTPUT_MD${RESET}"
+print_header "${GREEN}Created: ${PURPLE}$OUTPUT_MD${RESET}"

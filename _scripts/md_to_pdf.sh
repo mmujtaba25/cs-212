@@ -83,9 +83,7 @@ TEMPLATE_PATH="${PROJECT_ROOT}/_scripts/style.typ"
 
 validate_template_exists "$TEMPLATE_PATH"
 
-print_header "Converting markdown to PDF using Typst"
-echo "Input:    $INPUT_MD"
-echo "Output:   $OUTPUT_PDF"
+print_info "${YELLOW}Converting $INPUT_MD to PDF${RESET}"
 
 # Build pandoc options for page ranges
 # default to 1 if not provided
@@ -108,9 +106,9 @@ pandoc "$INPUT_MD" \
 # Check result
 if [ $? -eq 0 ]; then
   echo ""
-  print_header "PDF created successfully: $OUTPUT_PDF"
+  print_header "${GREEN}Created: ${PURPLE}$OUTPUT_PDF${RESET}"
 else
-  print_error "PDF conversion failed!"
+  print_header "${RED}PDF conversion failed!${RESET}" "${RED}"
   check_dependencies
   exit 1
 fi

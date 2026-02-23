@@ -61,31 +61,34 @@ _print_box() {
 # Public UI Functions
 # ------------------------------------------------------------------------------
 print_header() {
-  _print_box "$1" "$CYAN" "$BOLD"
+  local text="$1"
+  local color="${2:-$CYAN}"
+  _print_box "$text" "$color" "$BOLD"
 }
 print_step() {
   local step="$1"
   local total="$2"
   local title="$3"
-  _print_box "Step $step/$total — $title" "$BLUE" "$BOLD"
+  local color="${4:-$BLUE}"
+  _print_box "Step $step / $total — $title" "$color" "$BOLD"
 }
 print_section() {
   _print_box "$1" "$PURPLE" ""
 }
 print_success() {
-  echo -e "${GREEN}✓ $1${RESET}"
+  echo -e "${GREEN} ✓ $1${RESET}"
 }
 
 print_error() {
-  echo -e "${RED}✗ $1${RESET}"
+  echo -e "${RED} ✗ $1${RESET}"
 }
 
 print_warning() {
-  echo -e "${YELLOW}⚠ $1${RESET}"
+  echo -e "${YELLOW} ⚠ $1${RESET}"
 }
 
 print_info() {
-  echo -e "${CYAN}→ $1${RESET}"
+  echo -e "${CYAN} → $1${RESET}"
 }
 
 print_separator() {
