@@ -63,6 +63,7 @@ clear
 validate_args "$@"
 
 LAB_NAME="$1"
+LAB_NAME="${LAB_NAME%/}" # remove trailing slash if provided
 START_PAGE="${2:-}"
 END_PAGE="${3:-}"
 LAB_DIR="${PROJECT_ROOT}/${LAB_NAME}"
