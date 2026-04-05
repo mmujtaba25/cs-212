@@ -1,5 +1,7 @@
 package Lab8.Hospital;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 
 public class Hospital
@@ -12,6 +14,16 @@ public class Hospital
     {
         this.name = name;
         this.address = address;
+    }
+    
+    public void printInfo()
+    {
+        System.out.println("Hospital: " + this.getName() + ", Address: " + this.getAddress());
+        System.out.println("Departments:");
+        for (Department d : this.getDepartments())
+        {
+            System.out.println(d.getName());
+        }
     }
 
     /* ADDING */
@@ -53,6 +65,11 @@ public class Hospital
     public String getAddress() { return address; }
 
     public ArrayList<Department> getDepartments() { return departments; }
+
+    public @Nullable Department getDepartmentByName(String name)
+    {
+        return departments.stream().filter(department -> department.getName().equals(name)).findFirst().orElse(null);
+    }
 
     /* SETTERS */
 

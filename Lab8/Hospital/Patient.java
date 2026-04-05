@@ -28,6 +28,13 @@ public class Patient
         this.dateAccepted = Date.from(Instant.now());
     }
 
+    public void printInfo()
+    {
+        System.out.println("Patient Name: " + this.getName());
+        System.out.println("Diagnosis Report: " + this.getDiagnosisReport());
+        System.out.println("Doctor: " + this.getTreatingDoctor().getName());
+        System.out.println("Days in Hospital: " + this.getDaysStayed());
+    }
 
     /* GETTERS */
 
