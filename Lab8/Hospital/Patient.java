@@ -25,6 +25,7 @@ public class Patient
         this.name = name;
         this.birthDate = birthDate;
         this.gender = gender;
+        this.dateAccepted = Date.from(Instant.now());
     }
 
 
