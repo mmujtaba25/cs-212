@@ -3,6 +3,8 @@
 #let startPage = $start-page$
 #let endPage = $end-page$
 
+#let horizontalrule = line(length: 100%)
+
 // Set the counter to startPage
 #counter(page).update(startPage)
 

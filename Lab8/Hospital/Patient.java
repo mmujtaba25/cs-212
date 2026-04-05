@@ -59,7 +59,6 @@ public class Patient
     public Patient setDateAccepted(Date dateAccepted)
     {
         this.dateAccepted = dateAccepted;
-        Date.from(Instant.now());
         return this;
     }
 
