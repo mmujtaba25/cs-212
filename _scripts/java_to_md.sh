@@ -61,14 +61,26 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
   CLASS=$(grep -m1 -E "class|interface|enum" "$file" |
     sed -E 's/.*(class|interface|enum)[[:space:]]+([A-Za-z0-9_]+).*/\2/')
 
-  # Format lab part: converts "lab1" to "Lab 1"
-  LAB_PART=$(echo "$PACKAGE" | cut -d'.' -f1 | sed 's/\([A-Za-z]\)\([0-9]\)/\1 \2/')
+  # Split package into parts and format each
+  FORMATTED_PACKAGE=""
 
-  # Format task part: converts "Task1" to "Task 1"
-  TASK_PART=$(echo "$CLASS" | sed 's/\([A-Za-z]\)\([0-9]\)/\1 \2/')
+  IFS='.' read -ra PARTS <<< "$PACKAGE"
+  for part in "${PARTS[@]}"; do
+    # Convert Lab9 -> Lab 9, Part1 -> Part 1
+    formatted=$(echo "$part" | sed 's/\([A-Za-z]\)\([0-9]\)/\1 \2/g')
 
-  # Create the title for this section
-  TITLE="$LAB_PART - $TASK_PART"
+    if [ -z "$FORMATTED_PACKAGE" ]; then
+      FORMATTED_PACKAGE="$formatted"
+    else
+      FORMATTED_PACKAGE="$FORMATTED_PACKAGE - $formatted"
+    fi
+  done
+
+  # Format class name
+  CLASS_NAME=$(echo "$CLASS" | sed 's/\([A-Za-z]\)\([0-9]\)/\1 \2/g')
+
+  # Final title
+  TITLE="$FORMATTED_PACKAGE - $CLASS_NAME"
 
   echo ""
   print_section "$TITLE"
@@ -128,9 +140,9 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
 
     # Extract fully qualified class name (package.ClassName)
     if [ -n "$PACKAGE" ] && [ "$PACKAGE" != "(default package)" ]; then
-      FULL_CLASS_NAME="${PACKAGE}.${CLASS}"
+      CLASS_NAME="${PACKAGE}.${CLASS}"
     else
-      FULL_CLASS_NAME="$CLASS"
+      CLASS_NAME="$CLASS"
     fi
 
     print_info "[2/2] Running program..."
@@ -160,7 +172,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
         TYPESCRIPT_FILE=$(mktemp)
 
         # Run script connected to the terminal; run it in background and wait for it explicitly
-        script -q "$TYPESCRIPT_FILE" bash -lc "java $FULL_CLASS_NAME" </dev/tty &
+        script -q "$TYPESCRIPT_FILE" bash -lc "java $CLASS_NAME" </dev/tty &
         SCRIPT_PID=$!
         wait "$SCRIPT_PID"
         SCRIPT_EXIT=$?
@@ -189,7 +201,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
         rm -f "$TYPESCRIPT_FILE"
       else
         # Linux version
-        script -q -c "java $FULL_CLASS_NAME" "$TEMP_OUTPUT" </dev/tty
+        script -q -c "java $CLASS_NAME" "$TEMP_OUTPUT" </dev/tty
         PROGRAM_OUTPUT=$(cat "$TEMP_OUTPUT" | col -b)
         RUN_STATUS=$?
       fi
