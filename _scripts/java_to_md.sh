@@ -150,7 +150,7 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
 
     HAS_MAIN=$(grep -E "public[[:space:]]+static[[:space:]]+void[[:space:]]+main" "$file")
 
-    if [ --n "$HAS_MAIN" ]; then
+    if [ -n "$HAS_MAIN" ]; then
       print_warning "Capturing Session..."
       echo ""
 
