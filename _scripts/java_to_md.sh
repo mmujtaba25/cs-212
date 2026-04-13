@@ -148,11 +148,9 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
     # Create a temporary file for capturing output
     TEMP_OUTPUT=$(mktemp)
 
-    # First, try with a short timeout to see if program needs input
-    NEEDS_INPUT=true
+    HAS_MAIN=$(grep -E "public[[:space:]]+static[[:space:]]+void[[:space:]]+main" "$file")
 
-    if [ "$NEEDS_INPUT" = true ]; then
-      # Program needs input - run it interactively
+    if [ --n "$HAS_MAIN" ]; then
       print_warning "Capturing Session..."
       echo ""
 
@@ -199,28 +197,24 @@ sort "$TMP_FILE" | while IFS="|" read -r PACKAGE file; do
       echo ""
       print_success "Session captured successfully"
     else
-      # Program doesn't need input - use captured output
-      PROGRAM_OUTPUT=$(cat "$TEMP_OUTPUT")
-      RUN_STATUS=$?
-      print_success "Program executed"
+      print_warning "No main method found - skipping execution output"
+      PROGRAM_OUTPUT=""
     fi
 
     rm -f "$TEMP_OUTPUT"
     cd - >/dev/null 2>&1
 
-    # Add program output section to markdown
-    {
-      echo "## Program Output"
-      echo
-      echo '```'
-      if [ -n "$PROGRAM_OUTPUT" ]; then
-        echo "$PROGRAM_OUTPUT"
-      else
-        echo "[No output]"
-      fi
-      echo '```'
-      echo
-    } >>"$OUTPUT_MD"
+    # Add program output section to markdown if not empty
+    if [ -n "$PROGRAM_OUTPUT" ]; then
+      {
+          echo "## Program Output"
+          echo
+          echo '```'
+          echo "$PROGRAM_OUTPUT"
+          echo '```'
+          echo
+      } >>"$OUTPUT_MD"
+    fi
 
     # Clean up compiled .class files from source root
     find "$SOURCE_ROOT" -name "*.class" -delete 2>/dev/null
