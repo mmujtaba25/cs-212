@@ -88,12 +88,13 @@ footer: context {
 #show raw.where(block: false): it => {
   box(
     fill: rgb("#343539"),           // Claude.icls DOC_CODE_INLINE background
-    inset: (x: 0.2em, y: 0.1em),
+    inset: (x: 0.4em, y: 0.25em),
     outset: (y: 0.15em),
-    radius: 2pt
+    radius: 3pt,
+    baseline: 15%                   // NEW: Keeps the padded box aligned with the text baseline
   )[
     #set text(
-      size: 0.9em,
+      size: 1.1em,
       fill: rgb("#ced0d6")          // Claude.icls DOC_CODE_INLINE foreground
     )
     #it
